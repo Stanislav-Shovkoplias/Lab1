@@ -4,7 +4,7 @@ Given a string containing digits from 2-9 inclusive, return all possible letter 
 
 A mapping of digits to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.
 
-<img src="/LetterCombinations/img/1200px-telephone-keypad2svg.png" alt="Example of telephone keypad" width="250" />
+<img src="/Lab1/LetterCombinations/img/1200px-telephone-keypad2svg.png" alt="Example of telephone keypad" width="250" />
 
 ## Example 1:
 
