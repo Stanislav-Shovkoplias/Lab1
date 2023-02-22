@@ -1,2 +1,10 @@
-# nodejs_lab1
-Three tasks from LeetCode, done in JavaScript
+# Node.JS Development Basics
+
+This repository contains all our labs on this subject.
+
+# List of labs:
+
+- LeetCode Problems
+- Web Scrapper
+- Express.JS
+- TBD
