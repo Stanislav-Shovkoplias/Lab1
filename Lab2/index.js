@@ -1,5 +1,4 @@
 const fs = require('fs');
-const net = require('net');
 const http = require('http');
 const https = require('https');
 const cheerio = require('cheerio');
@@ -18,9 +17,12 @@ const workdir = path.join(__dirname, 'news');
 var source = "";
 
 const loadAndParse = async function () {
-  source = "";
-  
+  source = "";  
+  var new_records = 0;
+
   var req = https.request(options, (response) => {
+    response.setEncoding('utf8'); // Fix broken bytes
+
     response.on("data", (chunk) => source += chunk);
     
     response.on("end", () => {
@@ -47,11 +49,13 @@ const loadAndParse = async function () {
             var filePath = workdir + `/${news_name}.html`;
 
             if (!fs.existsSync(filePath)) {
+              new_records++;
               var news_source = "";
               var options2 = Object.assign({}, options);
               options2.path = path;
               
               var newsreq = https.request(options2, (response) => {
+                response.setEncoding('utf8'); // Fix broken bytes
                 response.on("data", (chunk) => news_source += chunk);
                 response.on("end", () => {
                   
@@ -59,18 +63,23 @@ const loadAndParse = async function () {
                   const selector = 
                     "#overblock > #main > #content > #post > #article";
 
+                  fs.appendFileSync(filePath, `<h1>${news_name}</h1>\n`, (err) => { if (err) throw err; });
+
                   $(selector).children((childId, childElem) => {
                     if (childElem.tagName !== "div" && $(childElem).attr('style') === undefined){
                       // Writing news content to file
-                      fs.appendFile(filePath, $.html(childElem) + '\n', (err) => { if (err) throw err; });
+                      fs.appendFileSync(filePath, $.html(childElem) + '\n', (err) => { if (err) throw err; });
                     }
                   });
+
+                  fs.appendFileSync(filePath, '<a href="/api/news">-->Go back<--</a>', (err) => { if (err) throw err; });
                 });
               });
               newsreq.end();
             } 
           });
       });
+      console.log(`There is ${new_records} new records.`);
     });
   });
   req.end();
@@ -111,7 +120,7 @@ const enumerateDir = function(directoryPath) {
 
 const requestListener = function (request, response) {
   var date = new Date();
-  console.log(`Request: ${request.method} ${request.url} was at ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`);
+  console.log(`Request: ${request.method} ${decodeURI(request.url)} was at ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`);
   response.setHeader("Content-Type", "text/html; charset=UTF-8");
   switch (request.url) {
     case "/api/news":
@@ -121,9 +130,16 @@ const requestListener = function (request, response) {
       break;
     case request.url.startsWith("/api/news") ? request.url : '':
       var file = decodeURI(request.url.split("/")[3]);
-      response.writeHead(200);
-      response.write(fs.readFileSync(workdir + `/${file}`));
-      response.end();
+      if (file.length === 0 || !fs.existsSync(workdir + `/${file}`)) {
+        response.writeHead(404)
+        response.write("Not found.");
+        response.end();
+      }
+      else {
+        response.writeHead(200);
+        response.write(fs.readFileSync(workdir + `/${file}`));
+        response.end();
+      }
       break;
     default:
       response.writeHead(404);
