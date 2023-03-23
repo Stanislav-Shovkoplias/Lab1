@@ -89,7 +89,8 @@ const loadAndParse = async function () {
 (async function() {
   var timer = Date.now();
   
-  while(true) {
+  const just_true = true;
+  while(just_true) {
     if (Date.now() - timer > 60000) {
       console.log("60 seconds passed, refreshing news...");
       await loadAndParse();
@@ -146,7 +147,7 @@ const requestListener = function (request, response) {
       response.write("Endpoint not found.\n");
       response.end();
       break;
-  };
+  }
 }
 
 

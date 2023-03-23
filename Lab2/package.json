@@ -23,6 +23,7 @@
   "homepage": "https://github.com/RubyLegend/nodejs_labs#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
+    "eslint": "^8.36.0",
     "nodemon": "^2.0.21"
   }
 }
