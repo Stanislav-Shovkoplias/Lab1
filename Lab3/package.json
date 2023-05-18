@@ -1,0 +1,29 @@
+{
+  "name": "lab3",
+  "version": "1.0.0",
+  "description": "Express.JS Notes App",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RubyLegend/nodejs_labs.git#main"
+  },
+  "keywords": [
+    "Notes"
+  ],
+  "author": "RubyLegend",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/RubyLegend/nodejs_labs/issues"
+  },
+  "homepage": "https://github.com/RubyLegend/nodejs_labs/tree/main#readme",
+  "dependencies": {
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "nodemon": "^2.0.22",
+    "uuid": "^9.0.0"
+  }
+}

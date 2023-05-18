@@ -1,0 +1,50 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+<% if (typeof(key) === 'undefined' || typeof(notes.get(key)) === 'undefined') { %>
+    <div class="container">
+        <h1>Key not found.<h1>
+    </div>
+<% } else if (typeof(id) === 'undefined') { %>
+    <div class="container">
+        <h1>Note identificator not found.<h1>
+    </div>
+<% } else { %>
+<div class="container">
+    <form method="POST" action="edit">
+        <div class="form-group row pt-1 pb-1">
+            <label for="title" class="col-sm-2 col-form-label">Title</label>
+            <div class="col-sm-10">
+                <input id="title" name="title" type="text" class="form-control"
+                value=<%= notes.get(key).filter(element => element.getId() === id)[0].getNoteTitle() %>>
+            </div>
+        </div>
+        <div class="form-group row pt-1 pb-1">
+            <label for="data" class="col-sm-2 col-form-label">Content</label>
+            <div class="col-sm-10">
+<textarea id="data" name="data" type="text" rows="3" class="form-control">
+<%= notes.get(key).filter(element => element.getId() === id)[0].getNote() %></textarea>
+            </div>
+        </div>
+        <div class="form-group row pt-1 pb-1">
+            <label for="key" class="col-sm-2 col-form-label">Key</label>
+            <div class="col-sm-10">
+                <input id="key" name="key"
+                       type="text" class="form-control"
+                       value=<%=key%> readonly
+                >
+            </div>
+        </div>
+        <div class="form-group row pt-1 pb-1">
+            <label for="id" class="col-sm-2 col-form-label">Key</label>
+            <div class="col-sm-10">
+                <input id="id" name="id"
+                       type="text" class="form-control"
+                       value=<%=id%> readonly
+                >
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+<% } %>
+<%- include('../partials/footer') %>

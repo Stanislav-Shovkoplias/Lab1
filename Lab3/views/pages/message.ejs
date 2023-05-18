@@ -1,0 +1,15 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+<div class="container">
+
+    <h1><%= message %></h1>
+    <% if (typeof(content) !== 'undefined') { %>
+        <% if (typeof(escape) !== 'undefined' && escape === false) { %>
+            <%- content %>
+        <% } else { %>
+            <%= content  %>
+        <% } %>
+    <% } %>
+
+</div>
+<%- include('../partials/footer') %>

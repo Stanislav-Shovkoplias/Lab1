@@ -1,0 +1,46 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+<div class="container">
+    <% if (typeof(key) === 'undefined') { %>
+    <form method="POST" action="/">
+        <div class="form-group row">
+            <label for="key" class="col-sm-2 col-form-label">Enter your key to access notes</label>
+            <div class="col-sm-10">
+                <input id="key" name="key" type="text" class="form-control">
+            </div>
+        </div>
+    </form>
+    <% } else { %>
+
+    <h1> Available notes </h1>
+    <ul class="list-group">
+        <% if (typeof(notes.get(key)) !== 'undefined') {%>
+        <% notes.get(key).forEach((note) => { %>
+            <li class="list-group-item">
+                
+                <h2> <%= note.getNoteTitle() %> </h2>
+                <p> <%= note.getNote() %> </p>
+                <% if (typeof(note.getPublicId()) !== 'undefined') { %> 
+                    <p> Public URL: <a href=<%= `/viewport?id=${note.getPublicId()}` %>>Link</a> </p>
+                <% } %>
+                <form method="POST" action="delete">
+                    <input name="id" value=<%= note.getId() %> type="hidden">
+                    <input name="key" value=<%= key %> type="hidden"> 
+                    <button type="submit" class="btn btn-primary bg-danger border-danger">Delete</button>
+                </form>
+                <a href=<%= `edit?id=${note.getId()}&key=${key}` %>>
+                    <button class="btn btn-primary bg-warning border-warning">Edit</button>
+                </a>
+                <% if (typeof(note.getPublicId()) === 'undefined') { %>
+                    <form method="POST" action="viewport">
+                        <input name="id" value=<%= note.getId() %> type="hidden">
+                        <input name="key" value=<%= key %> type="hidden"> 
+                        <button type="submit" class="btn btn-primary">Generate public URL</button>
+                    </form>
+                <% } %>
+            </li>
+        <% }) %>
+    </ul>
+    <% }} %>
+</div>
+<%- include('../partials/footer') %>

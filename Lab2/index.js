@@ -4,6 +4,7 @@ const https = require('https');
 const cheerio = require('cheerio');
 const path = require('path');
 
+// Server setup
 const HOST = 'localhost';
 const PORT = 8080;
 const options = {
@@ -12,10 +13,11 @@ const options = {
   path: "/"
 };
 
+// Working vars
 const workdir = path.join(__dirname, 'news');
-
 var source = "";
 
+// Main parser
 const loadAndParse = async function () {
   source = "";  
   var new_records = 0;
@@ -37,7 +39,7 @@ const loadAndParse = async function () {
           .children("div.post_desc")
           .children("h2")
           .children((childId, childElem) => {
-            const news_name = $(childElem).text();
+            const news_name = $(childElem).text().replaceAll('/', '|').replaceAll('%', '');
             const path = $(childElem).attr('href');
             
             // Create directory if not exists
@@ -112,7 +114,7 @@ const enumerateDir = function(directoryPath) {
   var files = fs.readdirSync(directoryPath);
 
   for(const file of files) {
-    html_result += `<li><a href="/api/news/${file}">${file}</a></li>`;
+    html_result += `<li><a href="/api/news/${file}">${file.slice(0,-5)}</a></li>`;
   }
 
   html_result += "</ul>";
@@ -121,7 +123,7 @@ const enumerateDir = function(directoryPath) {
 
 const requestListener = function (request, response) {
   var date = new Date();
-  console.log(`Request: ${request.method} ${decodeURI(request.url)} was at ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`);
+  console.log(`Request: ${request.method} ${decodeURI(request.url)} was at ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} from ${request.socket.remoteAddress}`);
   response.setHeader("Content-Type", "text/html; charset=UTF-8");
   switch (request.url) {
     case "/api/news":
@@ -133,13 +135,20 @@ const requestListener = function (request, response) {
       var file = decodeURI(request.url.split("/")[3]);
       if (file.length === 0 || !fs.existsSync(workdir + `/${file}`)) {
         response.writeHead(404)
-        response.write("Not found.");
+        response.write(`Not found: ${file}`);
         response.end();
       }
       else {
         response.writeHead(200);
-        response.write(fs.readFileSync(workdir + `/${file}`));
-        response.end();
+        fs.readFile(workdir + `/${file}`, function(err, data) {
+          if (err) {
+            console.log("Error reading file.");
+          }
+          if (data) {
+            response.write(data);
+            response.end();
+          }
+        });
       }
       break;
     default:

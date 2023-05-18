@@ -1,0 +1,10 @@
+<div class="container">
+<% if (typeof(key) === 'undefined') { %>
+    <a href="new" class="btn btn-primary">New</a>
+
+    <a href="#" class="btn btn-primary disabled">New (with key)</a>
+<% } else { %>
+    <a href="new" class="btn btn-primary">New</a>
+    <a href=<%= "new?key=" + key %> class="btn btn-primary">New (with key)</a>
+<% } %>
+</div>
