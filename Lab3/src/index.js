@@ -6,7 +6,7 @@ const Note = require('./notes');
 const uuid = require('uuid');
 const app = express();
 
-const host = '127.0.0.1';
+const host = '0.0.0.0';
 const port = 3000;
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({extended: true}))
@@ -16,7 +16,6 @@ var viewNotes = new Map();
 
 app.all('/', (req, res) => {
     var key = req.body['key']
-    console.log(notes);
     res.render('pages/index', {
         notes,
         key,
