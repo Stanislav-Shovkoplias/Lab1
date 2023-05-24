@@ -108,7 +108,7 @@ app.post('/delete', (req, res) => {
         var userNotes = notes.get(key);
         userNotes.forEach(element => {
             if (element.getId() === id) {
-                notes.get(key).pop(element);
+                notes.get(key).splice(userNotes.indexOf(element), 1);
             }
         });
         res.render('pages/index', {
