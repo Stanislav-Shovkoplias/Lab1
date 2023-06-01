@@ -1,11 +1,12 @@
 const uuid = require('uuid')
 
 const Note = class {
-  constructor(title, note) {
+  constructor(title, note, user_id) {
     this.title = title;
     this.note = note;
 
     this.id = uuid.v1();
+    this.userID = user_id;
   }
 
   getNoteTitle() {
@@ -24,7 +25,7 @@ const Note = class {
     this.note = note;
   }
 
-  getId() {
+  getID() {
     return this.id;
   }
 
@@ -34,6 +35,14 @@ const Note = class {
 
   getPublicId() {
     return this.publicId;
+  }
+
+  getUserID() {
+    return this.userID
+  }
+
+  setUserID(user_id) {
+    this.userID = user_id
   }
 }
 

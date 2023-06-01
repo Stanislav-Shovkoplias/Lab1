@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  dictionary:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes: ["./src/.:/usr/src/app/src/"]
+    ports:
+      - "80:3000"
