@@ -49,13 +49,7 @@
             "in": "body",
             "description": "Add a user",
             "schema": {
-              "type": "object",
-              "properties": {
-                "username": {
-                  "type": "string",
-                  "example": "Joe"
-                }
-              }
+              "$ref": "#/definitions/User_nid"
             }
           }
         ],
@@ -223,42 +217,19 @@
             "name": "userID",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "User id"
           },
           {
             "name": "obj",
             "in": "body",
             "description": "New name",
             "schema": {
-              "type": "object",
-              "properties": {
-                "username": {
-                  "type": "string",
-                  "example": "Joe"
-                }
-              }
+              "$ref": "#/definitions/Note_nid"
             }
           }
         ],
         "responses": {
-          "200": {
-            "description": "Created",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "success"
-                },
-                "user": {
-                  "$ref": "#/definitions/User"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
-          },
           "403": {
             "description": "User already exist",
             "schema": {
@@ -298,7 +269,7 @@
             }
           },
           "406": {
-            "description": "username error",
+            "description": "name error",
             "schema": {
               "type": "object",
               "properties": {
@@ -308,7 +279,7 @@
                 },
                 "error": {
                   "type": "string",
-                  "example": "username not supplied"
+                  "example": "name not supplied"
                 }
               },
               "xml": {
@@ -327,21 +298,15 @@
         ],
         "parameters": [
           {
-            "name": "noteID",
-            "description": "Note id",
-            "in": "query",
-            "type": "string"
-          },
-          {
             "name": "page",
-            "in": "path",
+            "in": "query",
             "description": "Numper of page",
             "required": false,
             "type": "string"
           },
           {
             "name": "items_per_page",
-            "in": "path",
+            "in": "query",
             "description": "Items per page",
             "required": false,
             "type": "string"
@@ -585,6 +550,438 @@
         }
       }
     },
+    "/api/v1/note/{noteID}/tag": {
+      "get": {
+        "description": "Get all tags for note",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "noteID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Note id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of all tags for node",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Tag"
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Add tag to note",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "noteID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Note id"
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Add a tag",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "TagID": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "tag": {
+                  "$ref": "#/definitions/Tag"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "403": {
+            "description": "Tag already exist",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "tag already exist"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "406": {
+            "description": "name error",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "request body not found"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/note/{noteID}/tag/{tagID}": {
+      "delete": {
+        "description": "Delete tag from note by id ",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "noteID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Note id"
+          },
+          {
+            "name": "tagID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Tag id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "connection not found"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tag": {
+      "get": {
+        "description": "Get all tags",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Array of all tags",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Tag"
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Add tag",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "Add a tag",
+            "schema": {
+              "$ref": "#/definitions/Tag_nid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "tag": {
+                  "$ref": "#/definitions/Tag"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "403": {
+            "description": "Tag already exist",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "tag already exist"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "406": {
+            "description": "name error",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "request body not found"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tag/{tagID}": {
+      "get": {
+        "description": "Get user by id",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "tagID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Tag id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag",
+            "schema": {
+              "$ref": "#/definitions/Tag"
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "tag not found"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete tag by id",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "tagID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Tag id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "tag not found"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "description": "Patch tag by id",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "tagID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Tag id"
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "New data",
+            "schema": {
+              "$ref": "#/definitions/Tag_nid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "note": {
+                  "$ref": "#/definitions/Tag"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "error": {
+                  "type": "string",
+                  "example": "tag not found"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/link/{linkID}": {
       "get": {
         "description": "Get link by id",
@@ -596,13 +993,8 @@
             "name": "linkID",
             "in": "path",
             "required": true,
-            "type": "string"
-          },
-          {
-            "name": "noteID",
-            "description": "Link id",
-            "in": "query",
-            "type": "string"
+            "type": "string",
+            "description": "Link id"
           }
         ],
         "responses": {
@@ -804,6 +1196,39 @@
         }
       }
     },
+    "/api/v1/statistics": {
+      "get": {
+        "description": "Get API statistics",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Statistics by APIs",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "endpoint": {
+                    "type": "string",
+                    "example": "user"
+                  },
+                  "count": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
     "/new": {
       "get": {
         "description": "",
@@ -852,11 +1277,20 @@
     "User": {
       "type": "object",
       "properties": {
-        "userID": {
-          "type": "string",
-          "example": "dbdb1e30-0078-11ee-ba2d-e5ada0d4a151"
+        "ID": {
+          "type": "number",
+          "example": 0
         },
-        "username": {
+        "Name": {
+          "type": "string",
+          "example": "Ivan"
+        }
+      }
+    },
+    "User_nid": {
+      "type": "object",
+      "properties": {
+        "Name": {
           "type": "string",
           "example": "Ivan"
         }
@@ -865,19 +1299,15 @@
     "Note": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "example": "dbdb1e31-0078-11ee-ba2d-e5ada0d4a151"
+        "ID": {
+          "type": "number",
+          "example": 0
         },
-        "userID": {
-          "type": "string",
-          "example": "dbdb1e32-0078-11ee-ba2d-e5ada0d4a151"
-        },
-        "title": {
+        "Title": {
           "type": "string",
           "example": "Title"
         },
-        "note": {
+        "Content": {
           "type": "string",
           "example": "Content"
         }
@@ -886,15 +1316,15 @@
     "Note_nid": {
       "type": "object",
       "properties": {
-        "userID": {
-          "type": "string",
-          "example": "dbdb1e33-0078-11ee-ba2d-e5ada0d4a151"
+        "UserID": {
+          "type": "number",
+          "example": 0
         },
-        "title": {
+        "Title": {
           "type": "string",
           "example": "Title"
         },
-        "note": {
+        "Content": {
           "type": "string",
           "example": "Content"
         }
@@ -903,22 +1333,44 @@
     "Link": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "example": "dbdb1e34-0078-11ee-ba2d-e5ada0d4a151"
+        "ID": {
+          "type": "number",
+          "example": 0
         },
-        "noteID": {
-          "type": "string",
-          "example": "dbdb1e35-0078-11ee-ba2d-e5ada0d4a151"
+        "NoteID": {
+          "type": "number",
+          "example": 0
         }
       }
     },
     "Link_nid": {
       "type": "object",
       "properties": {
-        "noteID": {
+        "NoteID": {
+          "type": "number",
+          "example": 0
+        }
+      }
+    },
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "number",
+          "example": 0
+        },
+        "Name": {
           "type": "string",
-          "example": "dbdb1e36-0078-11ee-ba2d-e5ada0d4a151"
+          "example": "mood"
+        }
+      }
+    },
+    "Tag_nid": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "example": "mood"
         }
       }
     }

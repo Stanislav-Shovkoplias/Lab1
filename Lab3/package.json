@@ -24,7 +24,9 @@
     "@nestjs/swagger": "^6.3.0",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
+    "mysql": "^2.18.1",
     "nodemon": "^2.0.22",
+    "redis": "^4.6.7",
     "swagger-autogen": "^2.23.1",
     "swagger-ui-express": "^4.6.3",
     "uuid": "^9.0.0"

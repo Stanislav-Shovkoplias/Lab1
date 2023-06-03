@@ -22,26 +22,35 @@ const doc = {
   securityDefinitions: {},  // by default: empty object
   definitions: {
     User: {
-        userID: uuid.v1(),
-        username: 'Ivan'
+      ID: 0,
+      Name: 'Ivan'
+    },
+    User_nid: {
+      Name: 'Ivan'
     },
     Note: {
-        id: uuid.v1(),
-        userID: uuid.v1(),
-        title: 'Title',
-        note: 'Content'
+      ID: 0,
+      Title: 'Title',
+      Content: 'Content'
     },
     Note_nid: {
-        userID: uuid.v1(),
-        title: 'Title',
-        note: 'Content'
+      UserID: 0,
+      Title: 'Title',
+      Content: 'Content'
     },
     Link: {
-        id: uuid.v1(),
-        noteID: uuid.v1()
+      ID: 0,
+      NoteID: 0
     },
     Link_nid: {
-        noteID: uuid.v1()
+      NoteID: 0
+    },
+    Tag: {
+      ID: 0,
+      Name: 'mood'
+    },
+    Tag_nid: {
+      Name: 'mood'
     }
   },          // by default: empty object (Swagger 2.0)
   components: {}            // by default: empty object (OpenAPI 3.x)
