@@ -9,9 +9,9 @@ const NoteDB = require('./database/note');
 const UserDB = require('./database/user');
 const LinkDB = require('./database/link');
 const TagDB = require('./database/tag');
-const Note = require('./notes');
-const User = require('./user');
-const Link = require('./links');
+// const Note = require('./notes');
+// const User = require('./user');
+// const Link = require('./links');
 const swaggerUi = require('swagger-ui-express');
 const app = express();
 
@@ -19,40 +19,35 @@ const host = '0.0.0.0';
 const port = 3000;
 
 app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({
+    extended: true
+}))
 
 var users = new UserDB(db.con);
 var notes = new NoteDB(db.con);
 var links = new LinkDB(db.con);
 var tags = new TagDB(db.con);
 
-function replacer(key, value) {
-    if (value instanceof Map) {
-        var elements = new Array()
-        return value
-    } else {
-      return value;
-    }
-};
-
-function increment(rcon, key) {
-    rcon.get(key)
-        .then((value) => {
-            if (value === null) {
-                value = 1;
-            } else {
-                value++;
-            }
-            rcon.set(key, value);
-        })
-};
+// function increment(rcon, key) {
+//     rcon.get(key)
+//         .then((value) => {
+//             if (value === null) {
+//                 value = 1;
+//             } else {
+//                 value++;
+//             }
+//             rcon.set(key, value);
+//         })
+// };
 
 const swaggerFile = JSON.parse(fs.readFileSync('./swagger-output.json'))
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
 app.all("/api/v1", (req, res) => {
     res.setHeader("Content-Type", "application/json");
-    res.write(JSON.stringify({ status: "working" }));
+    res.write(JSON.stringify({
+        status: "working"
+    }));
     res.end();
 });
 
@@ -63,13 +58,18 @@ app.get("/api/v1/user", (req, res) => {
         description: 'Array of all users',
         schema: [{ $ref: '#/definitions/User' }]
     } */
-    increment(db.rcon, "user")
+    db.rcon.incr("user")
     res.setHeader("Content-Type", "application/json");
     users.GetAll()
         .then((result) => {
             res.write(JSON.stringify(result));
-            res.end();
-        });
+        })
+        .catch ((err) => { 
+            res.write(JSON.stringify({ status: "error", error: err }))
+        })
+        .finally(() => {
+            res.end()
+         })
 });
 app.get("/api/v1/user/:userID", (req, res) => {
     // #swagger.description = 'Get user by id'
@@ -82,29 +82,23 @@ app.get("/api/v1/user/:userID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'user not found' }
     } */
-    increment(db.rcon, "user")
+    db.rcon.incr("user")
     res.setHeader("Content-Type", "application/json");
     var userID = req.params["userID"];
 
     users.GetByID(userID)
         .then((result) => {
             console.log(result);
-            res.write(JSON.stringify( result ));
+            res.write(JSON.stringify(result));
         })
         .catch(() => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "user not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "user not found"
+            }));
         })
         .finally(() => res.end())
-
-    // var user = users.get(userID);
-    // if (typeof (user) === 'undefined') {
-    //     res.statusCode = 404;
-    //     res.write(JSON.stringify({ status: "error", error: "user not found" }));
-    // } else {
-    //     res.write(JSON.stringify( user ));
-    // }
-    // res.end();
 });
 app.post("/api/v1/user", (req, res) => {
     // #swagger.description = 'Add user'
@@ -125,43 +119,58 @@ app.post("/api/v1/user", (req, res) => {
         description: 'username error',
         schema: { status: 'error', error: 'username not supplied' }
     } */
-    increment(db.rcon, "user")
+    db.rcon.incr("user")
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         if (body.length > 1e6)
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         if (body.length == 0) {
             res.statusCode = 404
-            res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+            res.write(JSON.stringify({
+                status: "error",
+                error: "request body not found"
+            }))
             res.end();
         } else {
             var post = JSON.parse(body);
             var username = post["Name"]
-            if (typeof (username) === 'undefined' || username.length === 0) {
+            if (typeof(username) === 'undefined' || username.length === 0) {
                 res.statusCode = 406
-                res.write(JSON.stringify({ status: "error", error: "username not supplied" }))
+                res.write(JSON.stringify({
+                    status: "error",
+                    error: "username not supplied"
+                }))
                 res.end();
             } else {
                 users.GetByName(username)
                     .then((result) => {
                         res.statusCode = 403
-                        res.write(JSON.stringify({ status: "error", error: "user already exist" }));
+                        res.write(JSON.stringify({
+                            status: "error",
+                            error: "user already exist"
+                        }));
                     })
                     .catch(async () => {
                         await users.AddByName(username)
                             .then((result) => {
-                                res.write(JSON.stringify({ status: "success", userID: result.insertId }));
+                                res.write(JSON.stringify({
+                                    status: "success",
+                                    userID: result.insertId
+                                }));
                             })
                             .catch((error) => {
                                 res.statusCode = 500
-                                res.write(JSON.stringify({ status: "error", error: error }));
+                                res.write(JSON.stringify({
+                                    status: "error",
+                                    error: error
+                                }));
                             })
                     })
                     .finally(() => {
@@ -182,26 +191,34 @@ app.delete("/api/v1/user/:userID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'user not found' }
     } */
-    increment(db.rcon, "user")
+    db.rcon.incr("user")
     res.setHeader("Content-Type", "application/json");
     var userID = req.params["userID"];
 
     users.GetByID(userID)
         .then(async () => {
             await users.DeleteByID(userID)
-                .then(() => { 
-                    res.write(JSON.stringify({ status: "success" }));
+                .then(() => {
+                    res.write(JSON.stringify({
+                        status: "success"
+                    }));
                 })
                 .catch((error) => {
                     res.statusCode = 500;
-                    res.write(JSON.stringify({ status: "error", error: error }));
+                    res.write(JSON.stringify({
+                        status: "error",
+                        error: error
+                    }));
                 })
         })
         .catch(() => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "user not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "user not found"
+            }));
         })
-        .finally(() => { 
+        .finally(() => {
             res.end();
         })
 });
@@ -225,11 +242,11 @@ app.patch("/api/v1/user/:userID", (req, res) => {
         description: 'name error',
         schema: { status: 'error', error: 'name not supplied' }
     } */
-    increment(db.rcon, "user")
+    db.rcon.incr("user")
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         // Too much POST data, kill the connection!
@@ -238,35 +255,49 @@ app.patch("/api/v1/user/:userID", (req, res) => {
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         var userID = req.params["userID"];
 
         users.GetByID(userID)
             .then(async () => {
                 if (body.length == 0) {
                     res.statusCode = 404
-                    res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+                    res.write(JSON.stringify({
+                        status: "error",
+                        error: "request body not found"
+                    }))
                     res.end();
                 } else {
                     var post = JSON.parse(body);
                     var username = post["Name"]
-                    if (typeof (username) === 'undefined' || username.length === 0) {
+                    if (typeof(username) === 'undefined' || username.length === 0) {
                         res.statusCode = 406
-                        res.write(JSON.stringify({ status: "error", error: "username not supplied" }))
+                        res.write(JSON.stringify({
+                            status: "error",
+                            error: "username not supplied"
+                        }))
                     } else {
                         await users.GetByName(username)
                             .then(() => {
                                 res.statusCode = 403
-                                res.write(JSON.stringify({ status: "error", error: "user with such username already exist" }));
+                                res.write(JSON.stringify({
+                                    status: "error",
+                                    error: "user with such username already exist"
+                                }));
                             })
                             .catch(async () => {
                                 await users.UpdateByID(userID, username)
                                     .then(() => {
-                                        res.write(JSON.stringify({ status: "success" }));
+                                        res.write(JSON.stringify({
+                                            status: "success"
+                                        }));
                                     })
                                     .catch((error) => {
                                         res.statusCode = 500
-                                        res.write(JSON.stringify({ status: "error", error: error }));
+                                        res.write(JSON.stringify({
+                                            status: "error",
+                                            error: error
+                                        }));
                                     })
                             })
                     }
@@ -274,7 +305,10 @@ app.patch("/api/v1/user/:userID", (req, res) => {
             })
             .catch(() => {
                 res.statusCode = 404
-                res.write(JSON.stringify({ status: "error", error: "user not found" }));
+                res.write(JSON.stringify({
+                    status: "error",
+                    error: "user not found"
+                }));
             })
             .finally(() => {
                 res.end();
@@ -299,7 +333,7 @@ app.get("/api/v1/note", (req, res) => {
             description: 'Items per page',
             required: 'false'
     } */
-    increment(db.rcon, "note")
+    db.rcon.incr("note")
     res.setHeader("Content-Type", "application/json");
     var parsedUrl = url.parse(req.url, true); // true to get query as obj
     var page = parsedUrl.query['page'];
@@ -307,11 +341,14 @@ app.get("/api/v1/note", (req, res) => {
 
     notes.GetAll(page, limit)
         .then((result) => {
-            res.write(JSON.stringify( result ));
+            res.write(JSON.stringify(result));
         })
         .catch((err) => {
             console.log(err)
-            res.write(JSON.stringify({ status: "error", error: err }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: err
+            }));
         })
         .finally(() => {
             res.end();
@@ -328,19 +365,22 @@ app.get("/api/v1/note/:noteID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'note not found' }
     } */
-    increment(db.rcon, "note")
+    db.rcon.incr("note")
     res.setHeader("Content-Type", "application/json");
     var noteID = req.params["noteID"];
 
     notes.GetByID(noteID)
-        .then((result) => { 
-            res.write(JSON.stringify( result ));
+        .then((result) => {
+            res.write(JSON.stringify(result));
         })
-        .catch(() => { 
+        .catch(() => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "note not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "note not found"
+            }));
         })
-        .finally(() => { 
+        .finally(() => {
             res.end();
         })
 });
@@ -359,21 +399,24 @@ app.post("/api/v1/note", (req, res) => {
         description: 'note error',
         schema: { status: 'error', error: 'noteID not supplied' }
     } */
-    increment(db.rcon, "note")
+    db.rcon.incr("note")
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         if (body.length > 1e6)
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         if (body.length == 0) {
             res.statusCode = 404
-            res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+            res.write(JSON.stringify({
+                status: "error",
+                error: "request body not found"
+            }))
             res.end();
         } else {
             var post = JSON.parse(body);
@@ -381,26 +424,38 @@ app.post("/api/v1/note", (req, res) => {
             var noteData = post["Content"];
             var userID = post["UserID"];
             var tag = post["Tag"];
-            if (typeof (userID) === 'undefined' || userID.length === 0) {
+            if (typeof(userID) === 'undefined' || userID.length === 0) {
                 res.statusCode = 406
-                res.write(JSON.stringify({ status: "error", error: "userID not found" }))
+                res.write(JSON.stringify({
+                    status: "error",
+                    error: "userID not found"
+                }))
                 res.end();
             } else {
                 users.GetByID(userID)
                     .then(async () => {
                         await notes.Add(title, noteData, userID, tag)
                             .then((result) => {
-                                res.write(JSON.stringify({ status: "success", noteID: result.insertId }));
+                                res.write(JSON.stringify({
+                                    status: "success",
+                                    noteID: result.insertId
+                                }));
                             })
                             .catch((err) => {
                                 res.statusCode = 500
-                                res.write(JSON.stringify({ status: "error", error: err }));
+                                res.write(JSON.stringify({
+                                    status: "error",
+                                    error: err
+                                }));
                             })
-                    
+
                     })
                     .catch(() => {
                         res.statusCode = 404;
-                        res.write(JSON.stringify({ status: "error", error: "user not found" }));
+                        res.write(JSON.stringify({
+                            status: "error",
+                            error: "user not found"
+                        }));
                     })
                     .finally(() => {
                         res.end();
@@ -420,19 +475,24 @@ app.delete("/api/v1/note/:noteID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'note not found' }
     } */
-    increment(db.rcon, "note")
+    db.rcon.incr("note")
     res.setHeader("Content-Type", "application/json");
     var noteID = req.params["noteID"];
 
     notes.DeleteByID(noteID)
         .then(() => {
-            res.write(JSON.stringify({ status: "success" }));
+            res.write(JSON.stringify({
+                status: "success"
+            }));
         })
-        .catch(() => { 
+        .catch(() => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "note not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "note not found"
+            }));
         })
-        .finally(() => { 
+        .finally(() => {
             res.end();
         })
 });
@@ -442,7 +502,7 @@ app.patch("/api/v1/note/:noteID", (req, res) => {
     /* #swagger.parameters['obj'] = {
             in: 'body',
             description: 'New data',
-            schema: {  title: 'Title', note: 'Content' }
+            schema: {  Title: 'Title', Note: 'Content' }
     } */
     /* #swagger.responses[200] = {
         description: 'Created',
@@ -452,25 +512,28 @@ app.patch("/api/v1/note/:noteID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'note not found' }
     } */
-    increment(db.rcon, "note")
+    db.rcon.incr("note")
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         if (body.length > 1e6)
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         var noteID = req.params["noteID"];
 
         notes.GetByID(noteID)
-            .then(async () => { 
+            .then(async () => {
                 if (body.length == 0) {
                     res.statusCode = 404
-                    res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+                    res.write(JSON.stringify({
+                        status: "error",
+                        error: "request body not found"
+                    }))
                     res.end();
                 } else {
                     var post = JSON.parse(body);
@@ -479,19 +542,27 @@ app.patch("/api/v1/note/:noteID", (req, res) => {
                     var tag = post["Tag"];
                     await notes.UpdateByID(noteID, title, data, tag)
                         .then(() => {
-                            res.write(JSON.stringify({ status: "success" }));
+                            res.write(JSON.stringify({
+                                status: "success"
+                            }));
                         })
                         .catch((err) => {
                             res.statusCode = 500
-                            res.write(JSON.stringify({ status: "error", error: err }));
+                            res.write(JSON.stringify({
+                                status: "error",
+                                error: err
+                            }));
                         })
                 }
             })
             .catch(() => {
                 res.statusCode = 404
-                res.write(JSON.stringify({ status: "error", error: "note not found" }));
+                res.write(JSON.stringify({
+                    status: "error",
+                    error: "note not found"
+                }));
             })
-            .finally(() => { 
+            .finally(() => {
                 res.end();
             })
     });
@@ -504,25 +575,31 @@ app.get("/api/v1/note/:noteID/tag", (req, res) => {
         description: 'Array of all tags for node',
         schema: [{ $ref: '#/definitions/Tag' }]
     } */
-    increment(db.rcon, "note")
+    db.rcon.incr("note")
     res.setHeader("Content-Type", "application/json");
     var noteID = req.params["noteID"];
 
     notes.GetByID(noteID)
-        .then(async () => { 
+        .then(async () => {
             await tags.GetByNoteID(noteID)
-                .then((result) => { 
+                .then((result) => {
                     res.write(JSON.stringify(result))
                 })
-                .catch(() => { 
+                .catch(() => {
                     res.statusCode = 404
-                    res.write(JSON.stringify({ status: "error", error: "tags not found" }))
+                    res.write(JSON.stringify({
+                        status: "error",
+                        error: "tags not found"
+                    }))
                 })
         })
         .catch(() => {
-            res.write(JSON.stringify({status: "error", error: "note not found"}))
+            res.write(JSON.stringify({
+                status: "error",
+                error: "note not found"
+            }))
         })
-        .finally(() => { 
+        .finally(() => {
             res.end();
         })
 
@@ -539,24 +616,29 @@ app.delete("/api/v1/note/:noteID/tag/:tagID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'connection not found' }
     } */
-    increment(db.rcon, "note")
+    db.rcon.incr("note")
     res.setHeader("Content-Type", "application/json");
     var noteID = req.params["noteID"];
     var tagID = req.params["tagID"];
 
     tags.DeleteFromNote(tagID, noteID)
         .then(() => {
-            res.write(JSON.stringify({ status: "success" }));
+            res.write(JSON.stringify({
+                status: "success"
+            }));
         })
-        .catch(() => { 
+        .catch(() => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "connection not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "connection not found"
+            }));
         })
-        .finally(() => { 
+        .finally(() => {
             res.end();
         })
 })
-app.post("/api/v1/note/:noteID/tag", (req, res) => { 
+app.post("/api/v1/note/:noteID/tag", (req, res) => {
     // #swagger.description = 'Add tag to note'
     // #swagger.parameters['noteID'] = { description: 'Note id' }
     /* #swagger.parameters['obj'] = {
@@ -576,34 +658,42 @@ app.post("/api/v1/note/:noteID/tag", (req, res) => {
         description: 'name error',
         schema: { status: 'error', error: 'request body not found' }
     } */
-    increment(db.rcon, "note");
+    db.rcon.incr("note");
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         if (body.length > 1e6)
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         if (body.length == 0) {
             res.statusCode = 404
-            res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+            res.write(JSON.stringify({
+                status: "error",
+                error: "request body not found"
+            }))
             res.end();
         } else {
             var post = JSON.parse(body);
             var tagID = post["TagID"];
             var noteID = parseInt(req.params["noteID"]);
-            
+
             tags.AddConnection(tagID, noteID)
-                .then(() => { 
-                    res.write(JSON.stringify({status: "success"}))
+                .then(() => {
+                    res.write(JSON.stringify({
+                        status: "success"
+                    }))
                 })
                 .catch((err) => {
                     res.statusCode = 500
-                    res.write(JSON.stringify({status: "error", error: err}))
+                    res.write(JSON.stringify({
+                        status: "error",
+                        error: err
+                    }))
                 })
                 .finally(() => res.end())
         }
@@ -619,16 +709,19 @@ app.get("/api/v1/tag", (req, res) => {
         description: 'Array of all tags',
         schema: [{ $ref: '#/definitions/Tag' }]
     } */
-    increment(db.rcon, "tag");
+    db.rcon.incr("tag");
     res.setHeader("Content-Type", "application/json");
 
     tags.GetAll()
         .then((result) => {
-            res.write(JSON.stringify( result ));
+            res.write(JSON.stringify(result));
         })
         .catch((err) => {
             console.log(err)
-            res.write(JSON.stringify({ status: "error", error: err }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: err
+            }));
         })
         .finally(() => {
             res.end();
@@ -645,19 +738,22 @@ app.get("/api/v1/tag/:tagID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'tag not found' }
     } */
-    increment(db.rcon, "tag");
+    db.rcon.incr("tag");
     res.setHeader("Content-Type", "application/json");
     var tagID = req.params["tagID"];
 
     tags.GetByID(tagID)
-        .then((result) => { 
-            res.write(JSON.stringify( result ));
+        .then((result) => {
+            res.write(JSON.stringify(result));
         })
-        .catch(() => { 
+        .catch(() => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "tag not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "tag not found"
+            }));
         })
-        .finally(() => { 
+        .finally(() => {
             res.end();
         })
 });
@@ -680,43 +776,58 @@ app.post("/api/v1/tag", (req, res) => {
         description: 'name error',
         schema: { status: 'error', error: 'request body not found' }
     } */
-    increment(db.rcon, "tag");
+    db.rcon.incr("tag");
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         if (body.length > 1e6)
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         if (body.length == 0) {
             res.statusCode = 404
-            res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+            res.write(JSON.stringify({
+                status: "error",
+                error: "request body not found"
+            }))
             res.end();
         } else {
             var post = JSON.parse(body);
             var name = post["Name"];
-            if (typeof (name) === 'undefined' || name.length === 0) {
+            if (typeof(name) === 'undefined' || name.length === 0) {
                 res.statusCode = 406
-                res.write(JSON.stringify({ status: "error", error: "name not found" }))
+                res.write(JSON.stringify({
+                    status: "error",
+                    error: "name not found"
+                }))
                 res.end();
             } else {
                 tags.GetByName(name)
                     .then(() => {
-                        res.write(JSON.stringify({ status: "error", error: "tag already exist" }))
+                        res.write(JSON.stringify({
+                            status: "error",
+                            error: "tag already exist"
+                        }))
                     })
                     .catch(async () => {
                         await tags.Add(name)
                             .then((result) => {
                                 console.log("trigger")
-                                res.write(JSON.stringify({ status: "success", tagID: result.insertId }))
+                                res.write(JSON.stringify({
+                                    status: "success",
+                                    tagID: result.insertId
+                                }))
                             })
                             .catch((err) => {
                                 res.statusCode = 500
-                                res.write(JSON.stringify({ status: "error", error: err }))
+                                res.write(JSON.stringify({
+                                    status: "error",
+                                    error: err
+                                }))
                             })
                     })
                     .finally(() => {
@@ -726,7 +837,7 @@ app.post("/api/v1/tag", (req, res) => {
         }
     });
 });
-app.delete("/api/v1/tag/:tagID", (req, res) => { 
+app.delete("/api/v1/tag/:tagID", (req, res) => {
     // #swagger.description = 'Delete tag by id'
     // #swagger.parameters['tagID'] = { description: 'Tag id' }
     /* #swagger.responses[200] = {
@@ -737,19 +848,24 @@ app.delete("/api/v1/tag/:tagID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'tag not found' }
     } */
-    increment(db.rcon, "tag");
+    db.rcon.incr("tag");
     res.setHeader("Content-Type", "application/json");
     var tagID = req.params["tagID"];
 
     tags.DeleteByID(tagID)
         .then(() => {
-            res.write(JSON.stringify({ status: "success" }));
+            res.write(JSON.stringify({
+                status: "success"
+            }));
         })
-        .catch(() => { 
+        .catch(() => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "tag not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "tag not found"
+            }));
         })
-        .finally(() => { 
+        .finally(() => {
             res.end();
         })
 })
@@ -769,50 +885,64 @@ app.patch("/api/v1/tag/:tagID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'tag not found' }
     } */
-    increment(db.rcon, "tag");
+    db.rcon.incr("tag");
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         if (body.length > 1e6)
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         var tagID = req.params["tagID"];
 
         tags.GetByID(tagID)
-            .then(async () => { 
+            .then(async () => {
                 if (body.length == 0) {
                     res.statusCode = 404
-                    res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+                    res.write(JSON.stringify({
+                        status: "error",
+                        error: "request body not found"
+                    }))
                     res.end();
                 } else {
                     var post = JSON.parse(body);
                     var name = post["Name"];
                     await tags.GetByName(name)
-                        .then(() => { 
-                            res.write(JSON.stringify({status: "error", error: "tag name already exist"}))
+                        .then(() => {
+                            res.write(JSON.stringify({
+                                status: "error",
+                                error: "tag name already exist"
+                            }))
                         })
-                        .catch(async () => { 
+                        .catch(async () => {
                             await tags.UpdateByID(tagID, name)
                                 .then(() => {
-                                    res.write(JSON.stringify({ status: "success" }));
+                                    res.write(JSON.stringify({
+                                        status: "success"
+                                    }));
                                 })
                                 .catch((err) => {
                                     res.statusCode = 500
-                                    res.write(JSON.stringify({ status: "error", error: err }));
+                                    res.write(JSON.stringify({
+                                        status: "error",
+                                        error: err
+                                    }));
                                 })
                         })
                 }
             })
             .catch(() => {
                 res.statusCode = 404
-                res.write(JSON.stringify({ status: "error", error: "tag not found" }));
+                res.write(JSON.stringify({
+                    status: "error",
+                    error: "tag not found"
+                }));
             })
-            .finally(() => { 
+            .finally(() => {
                 res.end();
             })
     });
@@ -831,17 +961,20 @@ app.get("/api/v1/link/:linkID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'link not found' }
     } */
-    increment(db.rcon, "link");
+    db.rcon.incr("link");
     res.setHeader("Content-Type", "application/json");
     var linkID = req.params["linkID"];
 
     links.GetByID(linkID)
-        .then((result) => { 
-            res.write(JSON.stringify( result ));
+        .then((result) => {
+            res.write(JSON.stringify(result));
         })
-        .catch(() => { 
+        .catch(() => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "link not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "link not found"
+            }));
         })
         .finally(() => {
             res.end();
@@ -862,21 +995,24 @@ app.post("/api/v1/link", (req, res) => {
         description: 'noteID error',
         schema: { status: 'error', error: 'noteID not supplied' }
     } */
-    increment(db.rcon, "link");
+    db.rcon.incr("link");
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         if (body.length > 1e6)
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         if (body.length == 0) {
             res.statusCode = 404
-            res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+            res.write(JSON.stringify({
+                status: "error",
+                error: "request body not found"
+            }))
             res.end();
         } else {
             var post = JSON.parse(body);
@@ -887,16 +1023,25 @@ app.post("/api/v1/link", (req, res) => {
                 .then(async () => {
                     await links.Add(noteID)
                         .then((result) => {
-                            res.write(JSON.stringify({ status: "success", linkID: result.insertId }));
+                            res.write(JSON.stringify({
+                                status: "success",
+                                linkID: result.insertId
+                            }));
                         })
                         .catch((err) => {
                             res.statusCode = 500
-                            res.write(JSON.stringify({ status: "error", error: err }));
+                            res.write(JSON.stringify({
+                                status: "error",
+                                error: err
+                            }));
                         })
                 })
                 .catch(() => {
                     res.statusCode = 406
-                    res.write(JSON.stringify({ status: "error", error: "note not found" }))
+                    res.write(JSON.stringify({
+                        status: "error",
+                        error: "note not found"
+                    }))
                 })
                 .finally(() => {
                     res.end();
@@ -916,19 +1061,24 @@ app.delete("/api/v1/link/:linkID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'link not found' }
     } */
-    increment(db.rcon, "link");
+    db.rcon.incr("link");
     res.setHeader("Content-Type", "application/json");
     var linkID = req.params["linkID"];
 
     links.DeleteByID(linkID)
-        .then(() => { 
-            res.write(JSON.stringify({ status: "success" }));
+        .then(() => {
+            res.write(JSON.stringify({
+                status: "success"
+            }));
         })
-        .catch((err) => { 
+        .catch((err) => {
             res.statusCode = 404;
-            res.write(JSON.stringify({ status: "error", error: "link not found" }));
+            res.write(JSON.stringify({
+                status: "error",
+                error: "link not found"
+            }));
         })
-        .finally(() => { 
+        .finally(() => {
             res.end();
         })
 });
@@ -948,61 +1098,78 @@ app.patch("/api/v1/link/:linkID", (req, res) => {
         description: 'Not found',
         schema: { status: 'error', error: 'link not found' }
     } */
-    increment(db.rcon, "link");
+    db.rcon.incr("link");
     res.setHeader("Content-Type", "application/json");
     var body = '';
 
-    req.on('data', function (data) {
+    req.on('data', function(data) {
         body += data;
 
         if (body.length > 1e6)
             req.socket.destroy();
     });
 
-    req.on('end', function () {
+    req.on('end', function() {
         var linkID = req.params["linkID"];
         links.GetByID(linkID)
             .then(async () => {
                 if (body.length == 0) {
                     res.statusCode = 404
-                    res.write(JSON.stringify({ status: "error", error: "request body not found" }))
+                    res.write(JSON.stringify({
+                        status: "error",
+                        error: "request body not found"
+                    }))
                     res.end();
                 } else {
                     var post = JSON.parse(body);
                     var noteID = post["NoteID"];
-                    if (typeof (noteID) === 'undefined' || noteID.length === 0) {
+                    if (typeof(noteID) === 'undefined' || noteID.length === 0) {
                         res.statusCode = 406
-                        res.write(JSON.stringify({ status: "error", error: "noteID not supplied" }))
+                        res.write(JSON.stringify({
+                            status: "error",
+                            error: "noteID not supplied"
+                        }))
                     } else {
                         await notes.GetByID(noteID)
                             .then(async () => {
                                 await links.UpdateByID(linkID, noteID)
                                     .then(() => {
-                                        res.write(JSON.stringify({ status: "success" }));
+                                        res.write(JSON.stringify({
+                                            status: "success"
+                                        }));
                                     })
                                     .catch((err) => {
                                         res.statusCode = 500
-                                        res.write(JSON.stringify({ status: "error", error: err }));
+                                        res.write(JSON.stringify({
+                                            status: "error",
+                                            error: err
+                                        }));
                                     })
 
                             })
                             .catch((err) => {
                                 res.statusCode = 500
-                                res.write(JSON.stringify({ status: "error", error: err }));
+                                res.write(JSON.stringify({
+                                    status: "error",
+                                    error: err
+                                }));
                             })
                     }
                 }
             })
-            .catch(() => { 
+            .catch(() => {
                 res.statusCode = 404
-                res.write(JSON.stringify({ status: "error", error: "link not found" }));
+                res.write(JSON.stringify({
+                    status: "error",
+                    error: "link not found"
+                }));
             })
             .finally(() => res.end());
     });
 });
 
 // Redis statistics
-app.get("/api/v1/statistics", async (req, res) => { 
+app.get("/api/v1/statistics", async (req, res) => {
     // #swagger.description = 'Get API statistics'
     /* #swagger.responses[200] = {
         description: 'Statistics by APIs',
@@ -1037,7 +1204,6 @@ app.all('/', (req, res) => {
         title: "Home Page"
     });
 });
-
 app.get('/new', (req, res) => {
     var parsedUrl = url.parse(req.url, true); // true to get query as obj
     var key = parsedUrl.query['key'];
@@ -1046,7 +1212,6 @@ app.get('/new', (req, res) => {
         key
     });
 });
-
 app.post('/new', (req, res) => {
     var key = req.body['key'];
     if (notes.get(key) === undefined) {
@@ -1060,7 +1225,6 @@ app.post('/new', (req, res) => {
         title: "Successfull"
     });
 })
-
 app.get('/edit', (req, res) => {
     var parsedUrl = url.parse(req.url, true); // true to get query as obj
     var id = parsedUrl.query['id'];
@@ -1072,18 +1236,16 @@ app.get('/edit', (req, res) => {
         id
     });
 });
-
-
 app.post('/edit', (req, res) => {
     var id = req.body['id'];
     var key = req.body['key'];
 
-    if (typeof (key) === 'undefined' || typeof (notes.get(key)) === 'undefined') {
+    if (typeof(key) === 'undefined' || typeof(notes.get(key)) === 'undefined') {
         res.render('pages/message', {
             title: "Error",
             message: `Key not found`,
         });
-    } else if (typeof (id) === 'undefined') {
+    } else if (typeof(id) === 'undefined') {
         res.render('pages/message', {
             title: "Error",
             message: `Note identificator not found`,
@@ -1104,17 +1266,16 @@ app.post('/edit', (req, res) => {
         title: "Successfull"
     });
 });
-
 app.post('/delete', (req, res) => {
     var id = req.body['id'];
     var key = req.body['key'];
 
-    if (typeof (key) === 'undefined' || typeof (notes.get(key)) === 'undefined') {
+    if (typeof(key) === 'undefined' || typeof(notes.get(key)) === 'undefined') {
         res.render('pages/message', {
             title: "Error",
             message: `Key not found`,
         });
-    } else if (typeof (id) === 'undefined') {
+    } else if (typeof(id) === 'undefined') {
         res.render('pages/message', {
             title: "Error",
             message: `Note identificator not found`,
@@ -1133,25 +1294,23 @@ app.post('/delete', (req, res) => {
         });
     }
 });
-
-
 app.post('/viewport', (req, res) => {
     var id = req.body['id'];
     var key = req.body['key'];
 
-    if (typeof (key) === 'undefined' || typeof (notes.get(key)) === 'undefined') {
+    if (typeof(key) === 'undefined' || typeof(notes.get(key)) === 'undefined') {
         res.render('pages/message', {
             title: "Error",
             message: `Key not found`,
         });
     } else {
         var note = notes.get(key).filter(el => el.getId() === id)[0];
-        if (typeof (id) === 'undefined') {
+        if (typeof(id) === 'undefined') {
             res.render('pages/message', {
                 title: "Error",
                 message: `Note identificator not found`,
             });
-        } else if (typeof (note.getPublicId()) !== 'undefined') {
+        } else if (typeof(note.getPublicId()) !== 'undefined') {
             res.render('pages/message', {
                 title: "Error",
                 message: `Note already have public URL`,
@@ -1159,7 +1318,10 @@ app.post('/viewport', (req, res) => {
         } else {
             var notePublicId = uuid.v1();
 
-            viewNotes.set(notePublicId, { id: id, key: key })
+            viewNotes.set(notePublicId, {
+                id: id,
+                key: key
+            })
 
             note.setPublicId(notePublicId);
 
@@ -1172,7 +1334,6 @@ app.post('/viewport', (req, res) => {
         }
     }
 });
-
 app.get('/viewport', (req, res) => {
     var parsedUrl = url.parse(req.url, true); // true to get query as obj
     var id = parsedUrl.query['id'];

@@ -497,11 +497,11 @@
             "schema": {
               "type": "object",
               "properties": {
-                "title": {
+                "Title": {
                   "type": "string",
                   "example": "Title"
                 },
-                "note": {
+                "Note": {
                   "type": "string",
                   "example": "Content"
                 }

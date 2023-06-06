@@ -56,7 +56,7 @@ var UserDB = class {
 
     DeleteByName(username) {
         return new Promise((resolve, reject) => {
-            this.con.query("delete from Users where username = ?", [username], (err, result) => {
+            this.con.query("delete from Users where Name = ?", [username], (err, result) => {
                 if (err) reject(err);
                 resolve(result)
             });
